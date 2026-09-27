@@ -1,0 +1,21 @@
+{
+  "name": "school-fees",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev":"npm run dev -w apps/web & npm run dev -w apps/api",
+    "dev:web": "npm run dev -w apps/web",
+    "dev:api": "npm run dev -w apps/api",
+    "build:web": "npm run build -w apps/web",
+    "build:api": "npm run build -w apps/api",
+    "start:web": "npm run preview -w apps/web -- --host 0.0.0.0 --port 5173",
+    "start:api": "npm run start -w apps/api"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3"
+  }
+}

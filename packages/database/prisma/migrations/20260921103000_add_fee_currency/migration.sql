@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Fee" ADD COLUMN "currency" TEXT NOT NULL DEFAULT 'USD';
