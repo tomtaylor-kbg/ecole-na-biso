@@ -1,0 +1,10 @@
+ {
+      "version": 2,
+      "buildCommand": "npx prisma generate --schema=packages/database/prisma/schema.prisma && npm run build:web",
+      "outputDirectory": "apps/web/dist",
+      "rewrites": [
+        { "source": "/api/(.*)", "destination": "/api" },
+        { "source": "/health", "destination": "/api" },
+        { "source": "/(.*)", "destination": "/index.html" }
+      ]
+    }

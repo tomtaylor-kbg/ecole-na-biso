@@ -42,11 +42,30 @@ router.get(
     ]);
 
     const feeRows = fees as unknown as Array<{ id: string; amount: unknown; currency?: string | null; schoolYearId: string; classId: string | null; studentId: string | null }>;
+    const feesBySchoolYear = new Map<string, { global: typeof feeRows; byClass: Map<string, typeof feeRows>; byStudent: Map<string, typeof feeRows> }>();
+    for (const fee of feeRows) {
+      let index = feesBySchoolYear.get(fee.schoolYearId);
+      if (!index) {
+        index = { global: [], byClass: new Map(), byStudent: new Map() };
+        feesBySchoolYear.set(fee.schoolYearId, index);
+      }
+      if (fee.studentId) {
+        const rows = index.byStudent.get(fee.studentId) ?? [];
+        rows.push(fee);
+        index.byStudent.set(fee.studentId, rows);
+      } else if (fee.classId) {
+        const rows = index.byClass.get(fee.classId) ?? [];
+        rows.push(fee);
+        index.byClass.set(fee.classId, rows);
+      } else {
+        index.global.push(fee);
+      }
+    }
     const balanceRows = students.map((student) => {
-      const applicableFees = feeRows.filter((fee) => {
-        if (fee.schoolYearId !== student.schoolYearId) return false;
-        return fee.studentId === student.id || (fee.classId === student.classId && !fee.studentId) || (!fee.classId && !fee.studentId);
-      });
+      const index = feesBySchoolYear.get(student.schoolYearId);
+      const applicableFees = index
+        ? [...(index.byStudent.get(student.id) ?? []), ...(index.byClass.get(student.classId) ?? []), ...index.global]
+        : [];
       const totalDue = applicableFees.reduce((sum, fee) => sum + Number(fee.amount), 0);
       const feeIds = new Set(applicableFees.map((fee) => fee.id));
       const currency = feeCurrency(applicableFees[0], settings?.currency ?? 'USD');

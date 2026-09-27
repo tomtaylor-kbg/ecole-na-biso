@@ -11,3 +11,4 @@ dist
 
 # Docker
 postgres-data
+.vercel

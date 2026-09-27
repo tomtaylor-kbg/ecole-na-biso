@@ -38,6 +38,8 @@ model Class {
   schoolYear SchoolYear @relation(fields: [schoolYearId], references: [id])
   students   Student[]
   fees       Fee[]
+
+  @@index([schoolYearId])
 }
 
 model Student {
@@ -58,6 +60,11 @@ model Student {
   schoolYear SchoolYear @relation(fields: [schoolYearId], references: [id])
   fees       Fee[]
   payments   Payment[]
+
+  @@index([classId])
+  @@index([schoolYearId])
+  @@index([status])
+  @@index([schoolYearId, classId])
 }
 
 model Fee {
@@ -77,6 +84,11 @@ model Fee {
   class      Class?     @relation(fields: [classId], references: [id])
   student    Student?   @relation(fields: [studentId], references: [id])
   payments   Payment[]
+
+  @@index([schoolYearId])
+  @@index([classId])
+  @@index([studentId])
+  @@index([status])
 }
 
 model Payment {
@@ -98,6 +110,13 @@ model Payment {
   student Student @relation(fields: [studentId], references: [id])
   fee     Fee     @relation(fields: [feeId], references: [id])
   user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([studentId])
+  @@index([feeId])
+  @@index([userId])
+  @@index([status])
+  @@index([paymentDate])
+  @@index([status, paymentDate])
 }
 
 model User {

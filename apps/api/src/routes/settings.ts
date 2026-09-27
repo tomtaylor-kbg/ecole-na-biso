@@ -1,9 +1,10 @@
 import { Router } from 'express';
+import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { recordAudit } from '../lib/audit.js';
 import { prisma } from '../lib/prisma.js';
 import { ApiError, asyncHandler } from '../lib/errors.js';
-import { requireAuth, requirePermission } from '../middleware/auth.js';
+import { requireAdmin, requireAuth, requirePermission } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -89,6 +90,36 @@ router.put(
       metadata: { currency: settings.currency, receiptPrefix: settings.receiptPrefix },
     });
     res.json(settings);
+  })
+);
+
+router.post(
+  '/reset-data',
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const password = z.object({ password: z.string().min(1) }).parse(req.body).password;
+    const admin = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { password: true } });
+    if (!admin || !(await bcrypt.compare(password, admin.password))) throw new ApiError(401, 'Mot de passe administrateur incorrect.');
+
+    const deleted = await prisma.$transaction(async (tx) => {
+      const payments = await tx.payment.deleteMany();
+      const fees = await tx.fee.deleteMany();
+      const students = await tx.student.deleteMany();
+      const classes = await tx.class.deleteMany();
+      const schoolYears = await tx.schoolYear.deleteMany();
+      await tx.auditLog.create({
+        data: {
+          action: 'RESET',
+          module: 'Paramètres',
+          entityType: 'Database',
+          description: 'Réinitialisation des données scolaires effectuée.',
+          metadata: { payments: payments.count, fees: fees.count, students: students.count, classes: classes.count, schoolYears: schoolYears.count },
+          userId: req.user!.id,
+        },
+      });
+      return { payments: payments.count, fees: fees.count, students: students.count, classes: classes.count, schoolYears: schoolYears.count };
+    });
+    res.json({ message: 'Les données scolaires ont été réinitialisées.', deleted });
   })
 );
 

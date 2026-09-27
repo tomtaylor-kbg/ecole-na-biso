@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, Save } from 'lucide-react';
+import { AlertTriangle, Building2, Save } from 'lucide-react';
 import type { ApiSettings } from './types';
 
 const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
@@ -124,12 +124,51 @@ function SettingsForm({ settings, mode, onSaved }: { settings?: ApiSettings | nu
   );
 }
 
-export function SettingsPage({ settings, onSaved }: { settings: ApiSettings | null; onSaved: (settings: ApiSettings) => void }) {
+export function SettingsPage({ settings, onSaved, onReset }: { settings: ApiSettings | null; onSaved: (settings: ApiSettings) => void; onReset?: () => void }) {
+  const [password, setPassword] = useState('');
+  const [resetError, setResetError] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
+
+  const resetData = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!window.confirm('Cette action supprimera les paiements, frais, élèves, classes et années scolaires. Continuer ?')) return;
+    setResetError('');
+    setResetMessage('');
+    setIsResetting(true);
+    try {
+      const response = await fetch(`${apiUrl}/api/settings/reset-data`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('school-fees-token') ?? ''}` },
+        body: JSON.stringify({ password }),
+      });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.message ?? 'La réinitialisation a échoué.');
+      setPassword('');
+      setResetMessage(body.message);
+      onReset?.();
+    } catch (error) {
+      setResetError(error instanceof Error ? error.message : 'La réinitialisation a échoué.');
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   return (
     <>
       <section className="page-header"><div><p className="eyebrow">Administration</p><h2>Paramètres</h2></div></section>
       <p className="page-subtitle">Configuration de l’établissement, des reçus et des informations affichées dans l’application.</p>
       <SettingsForm settings={settings} mode="settings" onSaved={onSaved} />
+      <section className="panel settings-section danger-section">
+        <div className="panel-header"><h3><AlertTriangle size={18} /> Réinitialiser les données</h3></div>
+        <p>Supprime définitivement les paiements, frais, élèves, classes et années scolaires. Les comptes, paramètres et journal d’audit sont conservés.</p>
+        <form className="reset-form" onSubmit={resetData}>
+          <label>Mot de passe administrateur<input required type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} /></label>
+          <button type="submit" className="danger-button" disabled={isResetting}>{isResetting ? 'Réinitialisation...' : 'Réinitialiser les données'}</button>
+        </form>
+        {resetError && <p className="form-error" role="alert">{resetError}</p>}
+        {resetMessage && <p className="form-success" role="status">{resetMessage}</p>}
+      </section>
     </>
   );
 }

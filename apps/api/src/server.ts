@@ -47,9 +47,6 @@ app.get('/api/me', (req, res) => {
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-app.listen(env.port, '0.0.0.0', () => {
-  console.log(`API running on http://localhost:${env.port}`);
-});
 
 export default app;
 

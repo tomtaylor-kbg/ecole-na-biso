@@ -42,7 +42,7 @@ export function DetailOverlay({ record, onClose }: { record: DetailRecord; onClo
       <section className="overlay-panel detail-panel" role="dialog" aria-modal="true" aria-labelledby="detail-title" onMouseDown={(event) => event.stopPropagation()}>
         <div className="overlay-header">
           <div><p className="eyebrow">Fiche métier</p><h2 id="detail-title">{record.title}</h2></div>
-          <button type="button" className="icon-button" title="Fermer" aria-label="Fermer" onClick={onClose}><X size={17} color='Red' /></button>
+          <button type="button" className="icon-button" title="Fermer" aria-label="Fermer" onClick={onClose}><X size={17} /></button>
         </div>
         <dl className="detail-list">
           {record.headings.map((heading, index) => <div className="detail-row" key={`${record.row.id}-${heading}`}><dt>{heading}</dt><dd>{record.row.cells[index] ?? 'Non renseigné'}</dd></div>)}
