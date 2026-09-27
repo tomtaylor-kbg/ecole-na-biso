@@ -66,21 +66,6 @@ async function main() {
     },
   });
 
-  await prisma.institutionSettings.upsert({
-    where: { id: 'default' },
-    update: {},
-    create: {
-      id: 'default',
-      name: 'Ecole na biso',
-      legalName: 'EP na biso',
-      city: 'Ville',
-      country: 'RDC',
-      currency: 'CDF',
-      receiptPrefix: 'RECU - ',
-      primaryColor: '#3b82f6',
-    },
-  });
-
   const student = await prisma.student.upsert({
     where: { matricule: 'ELV-001' },
     update: {},
