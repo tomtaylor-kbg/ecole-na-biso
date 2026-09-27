@@ -4,7 +4,7 @@ import { AlertTriangle, CheckCircle2, CircleDollarSign } from 'lucide-react';
 import { StatusBadge } from './StatusBadge';
 import type { ApiClass, BalanceReport } from './types';
 
-const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+const apiUrl = import.meta.env.VITE_API_URL ?? '';
 const money = (value: number, currency: string) => `${value.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} ${currency}`;
 const statusLabel = { paid: 'Soldé', partial: 'Partiel', unpaid: 'Impayé' };
 const statusTone = { paid: 'success', partial: 'warning', unpaid: 'danger' } as const;

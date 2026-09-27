@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="School Fees">
+  <rect width="64" height="64" rx="16" fill="#3b82f6"/>
+  <path d="M14 24 32 14l18 10-18 10-18-10Z" fill="#fff"/>
+  <path d="M20 29v12c7 6 17 6 24 0V29l-12 7-12-7Z" fill="#dbeafe"/>
+  <path d="M50 25v15" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+</svg>

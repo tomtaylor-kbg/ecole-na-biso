@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { userRoleOptions } from './roles';
 import type { ApiUserRole } from './types';
 
-const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+const apiUrl = import.meta.env.VITE_API_URL ?? '';
 
 const gettingStarted = [
   ['1. Configuration', <>Renseignez le nom de l’établissement, sa devise, le préfixe des reçus et la couleur dans <strong>Paramètres</strong>.</>],

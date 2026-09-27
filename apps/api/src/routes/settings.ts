@@ -117,9 +117,10 @@ router.post(
           userId: req.user!.id,
         },
       });
+      await tx.institutionSettings.deleteMany();
       return { payments: payments.count, fees: fees.count, students: students.count, classes: classes.count, schoolYears: schoolYears.count };
     });
-    res.json({ message: 'Les données scolaires ont été réinitialisées.', deleted });
+    res.json({ message: 'Les données ont été réinitialisées. Une nouvelle configuration est nécessaire.', setupRequired: true, deleted });
   })
 );
 

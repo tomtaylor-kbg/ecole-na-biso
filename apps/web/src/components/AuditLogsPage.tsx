@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { StatusBadge } from './StatusBadge';
 import type { ApiAuditLog } from './types';
 
-const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+const apiUrl = import.meta.env.VITE_API_URL ?? '';
 
 const actionLabels: Record<string, string> = {
   CREATE: 'Création',

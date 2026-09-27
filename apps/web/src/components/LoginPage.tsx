@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Settings } from 'lucide-react';
 export function LoginPage({ onLogin }: { onLogin: () => void }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -12,15 +11,27 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:4000'}/api/auth/login`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-      const data = await response.json();
+      const responseText = await response.text();
+      let data: { token?: string; user?: unknown; message?: string } = {};
+      if (responseText.trim()) {
+        try {
+          data = JSON.parse(responseText) as typeof data;
+        } catch {
+          throw new Error(`Réponse invalide du serveur (${response.status}).`);
+        }
+      }
 
       if (!response.ok) {
         throw new Error(data.message ?? 'Identifiants invalides.');
+      }
+
+      if (!data.token || !data.user) {
+        throw new Error('Réponse de connexion incomplète. Vérifiez la configuration de l’API.');
       }
 
       localStorage.setItem('school-fees-token', data.token);
@@ -37,9 +48,9 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
     <main className="login-page">
       <section className="login-panel">
         <div className="login-brand">
-          <div className="brand-mark">SF</div>
+          <div className="brand-mark"><img src="/favicon.svg" alt="" /></div>
           <div>
-            <strong>School Fees </strong>
+            <strong>Kalasa - Ketu </strong>
             <span>Administration scolaire</span>
           </div>
         </div>

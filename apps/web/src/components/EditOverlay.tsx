@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { userRoleOptions } from './roles';
 import type { ApiClass, ApiFee, ApiSchoolYear, ApiStudent, CrudResource, DetailRecord } from './types';
 
-const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+const apiUrl = import.meta.env.VITE_API_URL ?? '';
 const currencyOptions = ['USD', 'CDF', 'EUR'];
 type EditValue = Record<string, any>;
 

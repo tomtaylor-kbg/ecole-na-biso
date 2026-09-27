@@ -10,6 +10,7 @@ import { EditOverlay } from './components/EditOverlay';
 import { HelpPage } from './components/HelpPage';
 import { ListPage } from './components/ListPage';
 import { LoginPage } from './components/LoginPage';
+import { NotFoundPage } from './components/NotFoundPage';
 import { hasUiPermission, roleLabel } from './components/roles';
 import { SettingsPage, SetupPage } from './components/SettingsPage';
 import type { ApiClass, ApiFee, ApiPayment, ApiSchoolYear, ApiSettings, ApiStudent, ApiUser, CrudResource, DashboardData, DetailRecord, ListRow, OverlayType, PageCard, Stat } from './components/types';
@@ -19,7 +20,7 @@ type ThemeMode = 'light' | 'dark';
 type NavItem = { label: string; to: string; icon: LucideIcon };
 type AppData = { students: ApiStudent[]; classes: ApiClass[]; fees: ApiFee[]; payments: ApiPayment[]; schoolYears: ApiSchoolYear[]; users: ApiUser[] };
 
-const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+const apiUrl = import.meta.env.VITE_API_URL ?? '';
 const navItems: NavItem[] = [
   { label: 'Dashboard', to: '/', icon: LayoutDashboard }, { label: 'Élèves', to: '/students', icon: GraduationCap }, { label: 'Classes', to: '/classes', icon: Building2 }, { label: 'Frais scolaires', to: '/fees', icon: BadgeDollarSign }, { label: 'Paiements', to: '/payments', icon: CreditCard }, { label: 'Soldes', to: '/balances', icon: ReceiptText }, { label: 'Années scolaires', to: '/school-years', icon: CalendarRange }, { label: 'Utilisateurs', to: '/users', icon: Users }, { label: 'Journal', to: '/audit-logs', icon: ClipboardList }, { label: 'Aide', to: '/help', icon: CircleHelp }, { label: 'Paramètres', to: '/settings', icon: Settings },
 ];
@@ -185,15 +186,16 @@ function App() {
   if (setupRequired) return <SetupPage onConfigured={(nextSettings) => { setSettings(nextSettings); setSetupRequired(false); }} />;
 
   return <BrowserRouter>{!isAuthenticated ? <LoginPage onLogin={() => { setCurrentUser(getStoredUser()); setIsAuthenticated(true); }} /> : <div className="app-shell">
-    <aside className="sidebar"><div className="brand-wrap"><div className="brand-mark">{settings?.name?.slice(0, 2).toUpperCase() ?? 'SF'}</div><div><span className="brand-name">{settings?.name ?? 'School Fees'}</span><small>Administration</small></div></div><nav className="sidebar-nav" aria-label="Navigation principale">{visibleNavItems.map(({ label, to, icon: Icon }) => <NavLink key={to} to={to} className={({ isActive }) => `nav-item ${isActive ? 'is-active' : ''}`}><Icon size={18} /><span>{label}</span></NavLink>)}</nav><div className="sidebar-footer"><button type="button" className="logout-button" onClick={() => { localStorage.removeItem('school-fees-token'); localStorage.removeItem('school-fees-user'); setCurrentUser(null); setIsAuthenticated(false); }}><LogOut size={17} /><span>Déconnexion</span></button></div></aside>
+    <aside className="sidebar"><div className="brand-wrap"><div className="brand-mark"><img src="/favicon.svg" alt="" /></div><div><span className="brand-name">{settings?.name ?? 'School Fees'}</span><small>Administration</small></div></div><nav className="sidebar-nav" aria-label="Navigation principale">{visibleNavItems.map(({ label, to, icon: Icon }) => <NavLink key={to} to={to} className={({ isActive }) => `nav-item ${isActive ? 'is-active' : ''}`}><Icon size={18} /><span>{label}</span></NavLink>)}</nav><div className="sidebar-footer"><button type="button" className="logout-button" onClick={() => { localStorage.removeItem('school-fees-token'); localStorage.removeItem('school-fees-user'); setCurrentUser(null); setIsAuthenticated(false); }}><LogOut size={17} /><span>Déconnexion</span></button></div></aside>
     <main className="main-panel"><header className="topbar"><div><p className="eyebrow">Gestion scolaire</p><h1>Bonjour, {currentUser?.firstName ?? 'Admin'}</h1></div><div className="topbar-actions"><button type="button" className="theme-toggle" onClick={() => setTheme((current) => current === 'light' ? 'dark' : 'light')} aria-label="Basculer le thème">{theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}</button></div></header>
       {isLoading ? <div className="panel loading-state">Chargement des données...</div> : error ? <div className="panel form-error" role="alert">{error}</div> : <Routes>
         <Route path="/" element={<DashboardPage stats={stats} dashboard={dashboard} formatMoney={formatMoney} formatDate={formatDate} />} />
         <Route path="/balances" element={<BalancesPage classes={data.classes} onViewStudent={openStudentDetail} />} />
         {can('audit:read') && <Route path="/audit-logs" element={<AuditLogsPage />} />}
         {can('users:manage') && <Route path="/help" element={<HelpPage />} />}
-        {can('settings:manage') && <Route path="/settings" element={<SettingsPage settings={settings} onSaved={setSettings} onReset={refreshData} />} />}
+        {can('settings:manage') && <Route path="/settings" element={<SettingsPage settings={settings} onSaved={setSettings} onReset={() => { setSettings(null); setData(emptyData); setDashboard(null); setSetupRequired(true); }} />} />}
         {visibleResources.map((kind) => { const view = rowsFor(kind); const labels: Record<typeof kind, [string, string, string]> = { students: ['Élèves', 'Gestion des élèves et de leurs statuts', '+ Ajouter un élève'], classes: ['Classes', 'Suivi des classes et niveaux', '+ Ajouter une classe'], fees: ['Frais scolaires', 'Définition des frais et échéances', '+ Nouveau frais'], payments: ['Paiements', 'Historique et encaissements', '+ Enregistrer un paiement'], 'school-years': ['Années scolaires', 'Périodes académiques actives', '+ Ajouter une année'], users: ['Utilisateurs', 'Comptes admin et caissier', '+ Ajouter un utilisateur'] }; const [title, subtitle, action] = labels[kind]; const managePermission = `${kind}:manage`.replace('school-years', 'school-years'); const canCreate = kind === 'payments' ? can('payments:create') : can(managePermission); const canEdit = kind === 'payments' ? can('payments:update') : can(managePermission); const canDelete = kind === 'payments' ? can('payments:cancel') : can(managePermission); return <Route key={kind} path={`/${kind}`} element={<ListPage title={title} subtitle={subtitle} actions={canCreate ? [action] : []} cards={pageCards} rows={view.rows} headings={view.headings} onAction={setOverlay} onDelete={canDelete ? (id) => void handleDelete(kind, id) : undefined} onView={setDetailRecord} onEdit={canEdit ? (record) => setEditRecord({ resource: kind, record }) : undefined} />} />; })}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>}
     </main>
     {overlay && <CreationOverlay type={overlay} onClose={() => setOverlay(null)} onCreated={refreshData} />}

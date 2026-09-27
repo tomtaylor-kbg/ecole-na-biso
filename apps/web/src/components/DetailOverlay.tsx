@@ -3,7 +3,7 @@ import { Printer, X } from 'lucide-react';
 import { StatusBadge } from './StatusBadge';
 import type { ClassFeeConfiguration, DetailRecord, PaymentReceipt, StudentFinancialSituation } from './types';
 
-const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+const apiUrl = import.meta.env.VITE_API_URL ?? '';
 const money = (value: number, currency: string) => `${value.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} ${currency}`;
 const date = (value: string) => new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(value));
 
