@@ -24,14 +24,16 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export const classInputSchema = z.object({
   code: z.string().trim().min(2).max(20),
   name: z.string().trim().min(2).max(100),
-  levelId: z.string().min(1),
+  levelId: z.string().min(1).optional(),
+  // Legacy/form compatibility: the API resolves this label to levelId.
+  level: z.string().trim().min(1).optional(),
   schoolYearId: z.string().min(1),
   section: classSectionSchema.default('UNIQUE'),
   orientation: classOrientationSchema.optional().nullable(),
   capacity: z.coerce.number().int().positive().optional().nullable(),
   status: classStatusSchema.default('ACTIVE'),
   teacherId: z.string().min(1).optional().nullable(),
-}).strict();
+}).strict().refine((value) => Boolean(value.levelId || value.level), { message: 'Un niveau est requis.', path: ['levelId'] });
 export type ClassInput = z.infer<typeof classInputSchema>;
 
 export const feeInputSchema = z.object({

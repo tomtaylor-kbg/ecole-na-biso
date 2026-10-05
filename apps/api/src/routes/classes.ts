@@ -20,6 +20,7 @@ const classUpdateSchema = z.object({
   code: z.string().trim().min(2).max(20).optional(),
   name: z.string().trim().min(2).max(100).optional(),
   levelId: z.string().min(1).optional(),
+  level: z.string().trim().min(1).optional(),
   schoolYearId: z.string().min(1).optional(),
   section: classSectionEnum.optional(),
   orientation: classOrientationEnum.optional().nullable(),
@@ -28,7 +29,7 @@ const classUpdateSchema = z.object({
   teacherId: z.string().min(1).optional().nullable(),
 }).strict();
 
-function normalizeClassPayload(input: ClassInput) {
+function normalizeClassPayload(input: ClassInput & { levelId: string }) {
   return {
     name: input.name.trim(),
     code: input.code.trim(),
@@ -40,6 +41,32 @@ function normalizeClassPayload(input: ClassInput) {
     status: input.status ?? 'ACTIVE',
     teacherId: input.teacherId,
   };
+}
+
+async function resolveLevelId(levelId?: string, levelName?: string) {
+  const reference = levelId ?? levelName;
+  if (!reference) throw new ApiError(400, 'Le niveau de la classe est requis.');
+  const level = await prisma.level.findFirst({
+    where: { OR: [{ id: reference }, { name: { equals: reference, mode: 'insensitive' } }] },
+    select: { id: true },
+  });
+  if (level) return level.id;
+  if (levelId) throw new ApiError(400, `Niveau introuvable : ${reference}.`);
+
+  const levels = {
+    Maternelle: { code: 'MATERNELLE', cycle: 'MATERNELLE' as const, order: 1 },
+    Primaire: { code: 'PRIMAIRE', cycle: 'PRIMAIRE' as const, order: 2 },
+    Secondaire: { code: 'SECONDAIRE', cycle: 'SECONDAIRE' as const, order: 3 },
+  } as const;
+  const definition = levels[reference as keyof typeof levels];
+  if (!definition) throw new ApiError(400, `Niveau introuvable : ${reference}.`);
+  const created = await prisma.level.upsert({
+    where: { code: definition.code },
+    update: {},
+    create: { code: definition.code, name: reference, cycle: definition.cycle, order: definition.order },
+    select: { id: true },
+  });
+  return created.id;
 }
 
 async function getClassFeeConfiguration(id: string) {
@@ -187,10 +214,11 @@ router.post(
   '/',
   asyncHandler(async (req, res) => {
     const payload = classSchema.parse(req.body);
+    const levelId = await resolveLevelId(payload.levelId, payload.level);
     const data = normalizeClassPayload({
       ...payload,
       code: payload.code,
-      levelId: payload.levelId,
+      levelId,
       schoolYearId: payload.schoolYearId,
     });
     const created = await prisma.class.create({
@@ -237,10 +265,13 @@ router.put(
     });
     if (!current) throw new ApiError(404, 'Classe introuvable.');
 
+    const resolvedLevelId = incoming.levelId !== undefined || incoming.level !== undefined
+      ? await resolveLevelId(incoming.levelId, incoming.level)
+      : undefined;
     const data = {
       ...(incoming.code !== undefined ? { code: incoming.code } : {}),
       ...(incoming.name !== undefined ? { name: incoming.name } : {}),
-      ...(incoming.levelId !== undefined ? { levelId: incoming.levelId } : {}),
+      ...(resolvedLevelId !== undefined ? { levelId: resolvedLevelId } : {}),
       ...(incoming.schoolYearId !== undefined ? { schoolYearId: incoming.schoolYearId } : {}),
       ...(incoming.section !== undefined ? { section: incoming.section } : {}),
       ...(incoming.orientation !== undefined ? { orientation: incoming.orientation } : {}),
