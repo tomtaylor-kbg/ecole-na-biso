@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Printer, X } from 'lucide-react';
 import { StatusBadge } from './StatusBadge';
 import type { ClassFeeConfiguration, DetailRecord, PaymentReceipt, StudentFinancialSituation } from './types';
+import { openPdf } from '../utils/pdf';
 
 const apiUrl = import.meta.env.VITE_API_URL ?? '';
 const money = (value: number, currency: string) => `${value.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} ${currency}`;
@@ -49,7 +50,7 @@ export function DetailOverlay({ record, onClose }: { record: DetailRecord; onClo
           {record.row.status && <div className="detail-row"><dt>Statut</dt><dd><StatusBadge tone={record.row.status.tone}>{record.row.status.label}</StatusBadge></dd></div>}
         </dl>
         {isStudent && <section className="financial-block">
-          <div className="panel-header"><h3>Situation financière</h3></div>
+          <div className="panel-header"><h3>Situation financière</h3><button type="button" className="ghost-button no-print" onClick={() => void openPdf(`/api/printouts/students/${record.row.id}/profile.pdf`, `fiche-eleve-${record.row.id}.pdf`)}><Printer size={16} /> PDF</button></div>
           {error && <p className="form-error" role="alert">{error}</p>}
           {!error && !situation && <p className="form-help">Chargement de la situation financière...</p>}
           {situation && <>
@@ -95,7 +96,7 @@ export function DetailOverlay({ record, onClose }: { record: DetailRecord; onClo
           </>}
         </section>}
         {isPayment && <section className="financial-block receipt-block">
-          <div className="panel-header"><h3>Reçu de paiement</h3><button type="button" className="ghost-button no-print" onClick={() => window.print()}><Printer size={16} />Imprimer</button></div>
+          <div className="panel-header"><h3>Reçu de paiement</h3><div className="topbar-actions no-print"><button type="button" className="ghost-button" onClick={() => window.print()}><Printer size={16} />Imprimer</button><button type="button" className="ghost-button" onClick={() => void openPdf(`/api/printouts/payments/${record.row.id}/receipt.pdf`, `recu-${record.row.id}.pdf`)}><Printer size={16} />PDF thermique</button></div></div>
           {error && <p className="form-error" role="alert">{error}</p>}
           {!error && !receipt && <p className="form-help">Chargement du reçu...</p>}
           {receipt && <article className="receipt-card">

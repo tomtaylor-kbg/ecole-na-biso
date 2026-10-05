@@ -11,6 +11,7 @@ import dashboardRoutes from './routes/dashboard.js';
 import feesRoutes from './routes/fees.js';
 import healthRoutes from './routes/health.js';
 import paymentsRoutes from './routes/payments.js';
+import printoutsRoutes from './routes/printouts.js';
 import schoolYearsRoutes from './routes/schoolYears.js';
 import settingsRoutes from './routes/settings.js';
 import studentsRoutes from './routes/students.js';
@@ -38,6 +39,7 @@ app.use('/api/classes', classesRoutes);
 app.use('/api/students', studentsRoutes);
 app.use('/api/fees', feesRoutes);
 app.use('/api/payments', paymentsRoutes);
+app.use('/api/printouts', printoutsRoutes);
 app.use('/api/school-years', schoolYearsRoutes);
 
 app.get('/api/me', (req, res) => {

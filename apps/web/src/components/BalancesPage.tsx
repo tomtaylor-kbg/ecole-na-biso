@@ -3,6 +3,7 @@ import { AlertTriangle, CheckCircle2, CircleDollarSign, Eye, Printer, Users } fr
 import { StatusBadge } from './StatusBadge';
 import { classLabel } from './classLabels';
 import type { ApiClass, ApiSchoolYear, FinancialReport, MonthlyMinervalReport } from './types';
+import { openPdf } from '../utils/pdf';
 
 const apiUrl = import.meta.env.VITE_API_URL ?? '';
 const money = (value: number, currency: string) => `${value.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} ${currency}`;
@@ -168,7 +169,7 @@ export function BalancesPage({
         {view === 'reports' && <section className="panel financial-report-panel">
           <div className="panel-header financial-report-header">
             <div><p className="eyebrow">Rapport direction</p><h3>Situation financière {reportPeriod === 'day' ? 'journalière' : 'mensuelle'}</h3></div>
-            <button type="button" className="ghost-button report-print-button" onClick={() => window.print()}><Printer size={16} /> Imprimer / PDF</button>
+            <div className="topbar-actions report-print-button"><button type="button" className="ghost-button" onClick={() => window.print()}><Printer size={16} /> Imprimer</button><button type="button" className="ghost-button" onClick={() => void openPdf(`/api/printouts/financial-report.pdf?period=${reportPeriod}&date=${reportDate}${schoolYearId ? `&schoolYearId=${schoolYearId}` : ''}${classId ? `&classId=${classId}` : ''}`, `rapport-financier-${reportDate}.pdf`)}><Printer size={16} /> PDF direction</button></div>
           </div>
           <div className="financial-report-filters">
             <label>Vue<select value={reportPeriod} onChange={(event) => { const nextPeriod = event.target.value as 'day' | 'month'; setReportPeriod(nextPeriod); setReportDate(nextPeriod === 'day' ? currentDate() : currentMonth()); }}><option value="month">Mensuelle</option><option value="day">Journalière</option></select></label>
