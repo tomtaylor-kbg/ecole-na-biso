@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, NavLink, Route, Routes } from 'react-router-dom';
-import { AlertTriangle, BadgeDollarSign, Building2, CalendarRange, CircleHelp, ClipboardList, CreditCard, GraduationCap, LayoutDashboard, LogOut, Moon, ReceiptText, Settings, Sun, Users, WalletCards } from 'lucide-react';
+import { AlertTriangle, BadgeDollarSign, BarChart3, Building2, CalendarRange, CircleHelp, ClipboardList, CreditCard, GraduationCap, LayoutDashboard, LogOut, Moon, ReceiptText, Settings, Sun, Users, WalletCards } from 'lucide-react';
 import { AuditLogsPage } from './components/AuditLogsPage';
 import { BalancesPage } from './components/BalancesPage';
 import { classLabel, classOrientationLabel, classSectionLabel, classStatusLabel } from './components/classLabels';
@@ -23,7 +23,7 @@ type AppData = { students: ApiStudent[]; classes: ApiClass[]; fees: ApiFee[]; pa
 
 const apiUrl = import.meta.env.VITE_API_URL ?? '';
 const navItems: NavItem[] = [
-  { label: 'Dashboard', to: '/', icon: LayoutDashboard }, { label: 'Élèves', to: '/students', icon: GraduationCap }, { label: 'Classes', to: '/classes', icon: Building2 }, { label: 'Frais scolaires', to: '/fees', icon: BadgeDollarSign }, { label: 'Paiements', to: '/payments', icon: CreditCard }, { label: 'Suivi financier', to: '/balances', icon: ReceiptText }, { label: 'Années scolaires', to: '/school-years', icon: CalendarRange }, { label: 'Utilisateurs', to: '/users', icon: Users }, { label: 'Journal', to: '/audit-logs', icon: ClipboardList }, { label: 'Aide', to: '/help', icon: CircleHelp }, { label: 'Paramètres', to: '/settings', icon: Settings },
+  { label: 'Dashboard', to: '/', icon: LayoutDashboard }, { label: 'Élèves', to: '/students', icon: GraduationCap }, { label: 'Classes', to: '/classes', icon: Building2 }, { label: 'Frais scolaires', to: '/fees', icon: BadgeDollarSign }, { label: 'Paiements', to: '/payments', icon: CreditCard }, { label: 'Suivi financier', to: '/balances', icon: ReceiptText }, { label: 'Rapports direction', to: '/reports', icon: BarChart3 }, { label: 'Années scolaires', to: '/school-years', icon: CalendarRange }, { label: 'Utilisateurs', to: '/users', icon: Users }, { label: 'Journal', to: '/audit-logs', icon: ClipboardList }, { label: 'Aide', to: '/help', icon: CircleHelp }, { label: 'Paramètres', to: '/settings', icon: Settings },
 ];
 const emptyData: AppData = { students: [], classes: [], fees: [], payments: [], schoolYears: [], users: [] };
 
@@ -192,6 +192,7 @@ function App() {
       {isLoading ? <div className="panel loading-state">Chargement des données...</div> : error ? <div className="panel form-error" role="alert">{error}</div> : <Routes>
         <Route path="/" element={<DashboardPage stats={stats} dashboard={dashboard} formatMoney={formatMoney} formatDate={formatDate} />} />
         <Route path="/balances" element={<BalancesPage classes={data.classes} schoolYears={data.schoolYears} onViewStudent={openStudentDetail} />} />
+        <Route path="/reports" element={<BalancesPage view="reports" classes={data.classes} schoolYears={data.schoolYears} onViewStudent={openStudentDetail} />} />
         {can('audit:read') && <Route path="/audit-logs" element={<AuditLogsPage />} />}
         {can('users:manage') && <Route path="/help" element={<HelpPage />} />}
         {can('settings:manage') && <Route path="/settings" element={<SettingsPage settings={settings} onSaved={setSettings} onReset={() => { setSettings(null); setData(emptyData); setDashboard(null); setSetupRequired(true); }} />} />}

@@ -28,10 +28,12 @@ export function BalancesPage({
   classes,
   schoolYears,
   onViewStudent,
+  view = 'balances',
 }: {
   classes: ApiClass[];
   schoolYears: ApiSchoolYear[];
   onViewStudent: (studentId: string) => void;
+  view?: 'balances' | 'reports';
 }) {
   const [report, setReport] = useState<MonthlyMinervalReport | null>(null);
   const [month, setMonth] = useState(currentMonth);
@@ -126,15 +128,15 @@ export function BalancesPage({
   return (
     <div className="balances-page">
       <section className="page-header">
-        <div><p className="eyebrow">Recouvrement mensuel</p><h2>Suivi financier</h2></div>
+        <div><p className="eyebrow">{view === 'reports' ? 'Synthèse pour la direction' : 'Recouvrement mensuel'}</p><h2>{view === 'reports' ? 'Rapports direction' : 'Suivi financier'}</h2></div>
       </section>
-      <p className="page-subtitle">Situation du minerval par élève et reste à payer par classe.</p>
+      <p className="page-subtitle">{view === 'reports' ? 'Production des situations financières journalières et mensuelles.' : 'Situation du minerval par élève et reste à payer par classe.'}</p>
 
       <section className="panel minerval-filter-panel">
         <div className="panel-header minerval-filter-header">
-          <h3>Filtres du rapport</h3>
+          <h3>{view === 'reports' ? 'Filtres du rapport' : 'Filtres du suivi'}</h3>
           <div className="minerval-filters">
-            <label>Mois <input type="month" value={month} onChange={(event) => setMonth(event.target.value)} /></label>
+            {view === 'balances' && <label>Mois <input type="month" value={month} onChange={(event) => setMonth(event.target.value)} /></label>}
             <label>Année scolaire
               <select value={schoolYearId} onChange={(event) => { setSchoolYearId(event.target.value); setClassId(''); }}>
                 {schoolYears.map((year) => <option key={year.id} value={year.id}>{year.name}{year.isActive ? ' · active' : ''}</option>)}
@@ -146,7 +148,7 @@ export function BalancesPage({
                 {visibleClasses.map((item) => <option key={item.id} value={item.id}>{classLabel(item)}</option>)}
               </select>
             </label>
-            <label>Situation
+            {view === 'balances' && <label>Situation
               <select value={status} onChange={(event) => setStatus(event.target.value)}>
                 <option value="all">Toutes</option>
                 <option value="paid">En ordre</option>
@@ -154,7 +156,7 @@ export function BalancesPage({
                 <option value="debt">En dette (&lt; 50 %)</option>
                 <option value="missing-fee">Minerval non configuré</option>
               </select>
-            </label>
+            </label>}
           </div>
         </div>
       </section>
@@ -163,7 +165,7 @@ export function BalancesPage({
       {isLoading && <p className="form-help">Chargement de la situation financière...</p>}
 
       {!isLoading && report && <>
-        <section className="panel financial-report-panel">
+        {view === 'reports' && <section className="panel financial-report-panel">
           <div className="panel-header financial-report-header">
             <div><p className="eyebrow">Rapport direction</p><h3>Situation financière {reportPeriod === 'day' ? 'journalière' : 'mensuelle'}</h3></div>
             <button type="button" className="ghost-button report-print-button" onClick={() => window.print()}><Printer size={16} /> Imprimer / PDF</button>
@@ -183,8 +185,9 @@ export function BalancesPage({
               {reportPeriod === 'month' && <div><h4>Évolution journalière</h4><div className="report-list">{financialReport.timeline.length === 0 ? <p className="form-help">Aucune opération.</p> : financialReport.timeline.map((item) => <div className="report-list-row" key={item.date}><span>{new Date(`${item.date}T00:00:00`).toLocaleDateString('fr-FR')} <small>{item.paymentCount} opération(s)</small></span><strong>{item.amount.toLocaleString('fr-FR', { maximumFractionDigits: 2 })}</strong></div>)}</div></div>}
             </div>
           </>}
-        </section>
+        </section>}
 
+        {view === 'balances' && <>
         <section className="minerval-count-cards">
           {countCards.map(({ label, value, icon: Icon }) => (
             <article key={label} className="stat-card">
@@ -245,6 +248,7 @@ export function BalancesPage({
               </table>
             </div>}
         </section>
+        </>}
       </>}
     </div>
   );

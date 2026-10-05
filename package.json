@@ -10,6 +10,7 @@
     "dev":"npm run db:deploy && npm run dev -w apps/web & npm run dev:api",
     "dev:web": "npm run dev -w apps/web",
     "dev:api": "npm run db:deploy -w packages/database && npm run dev -w apps/api",
+    "build:contracts": "npm run build -w packages/contracts",
     "db:validate": "npm run db:validate -w packages/database",
     "db:deploy": "npm run db:deploy -w packages/database",
     "check": "npm run db:validate && npm run build:api && npm run build:web",
