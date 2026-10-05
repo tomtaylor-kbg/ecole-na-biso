@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { classInputSchema, classOrientationSchema, classSectionSchema, classStatusSchema } from '@school-fees/contracts';
+import type { ClassInput } from '@school-fees/contracts';
 import { recordAudit } from '../lib/audit.js';
 import { prisma } from '../lib/prisma.js';
 import { ApiError, asyncHandler } from '../lib/errors.js';
@@ -8,17 +10,44 @@ import { requirePermission } from '../middleware/auth.js';
 const router = Router();
 const feeCurrency = (fee: unknown) => (fee as { currency?: string | null }).currency ?? 'USD';
 
-const classSchema = z.object({
-  name: z.string().min(2),
-  level: z.string().min(2),
-  schoolYearId: z.string().min(1),
-});
+// Enums synchronisés avec Prisma
+const classSectionEnum = classSectionSchema;
+const classOrientationEnum = classOrientationSchema;
+const classStatusEnum = classStatusSchema;
+const classSchema = classInputSchema;
+
+const classUpdateSchema = z.object({
+  code: z.string().trim().min(2).max(20).optional(),
+  name: z.string().trim().min(2).max(100).optional(),
+  levelId: z.string().min(1).optional(),
+  schoolYearId: z.string().min(1).optional(),
+  section: classSectionEnum.optional(),
+  orientation: classOrientationEnum.optional().nullable(),
+  capacity: z.coerce.number().int().positive().optional().nullable(),
+  status: classStatusEnum.optional(),
+  teacherId: z.string().min(1).optional().nullable(),
+}).strict();
+
+function normalizeClassPayload(input: ClassInput) {
+  return {
+    name: input.name.trim(),
+    code: input.code.trim(),
+    levelId: input.levelId,
+    schoolYearId: input.schoolYearId,
+    section: input.section ?? 'UNIQUE',
+    orientation: input.orientation,
+    capacity: input.capacity,
+    status: input.status ?? 'ACTIVE',
+    teacherId: input.teacherId,
+  };
+}
 
 async function getClassFeeConfiguration(id: string) {
   const schoolClass = await prisma.class.findUnique({
     where: { id },
     include: {
       schoolYear: true,
+      level: true,
       students: {
         select: { id: true, matricule: true, firstName: true, lastName: true, status: true },
         orderBy: { lastName: 'asc' },
@@ -36,9 +65,10 @@ async function getClassFeeConfiguration(id: string) {
       OR: [
         { classId: schoolClass.id },
         { classId: null },
+        { levelId: schoolClass.levelId },
       ],
     },
-    orderBy: [{ classId: 'asc' }, { createdAt: 'asc' }],
+    orderBy: [{ classId: 'asc' }, { levelId: 'asc' }, { createdAt: 'asc' }],
   });
 
   const feeIds = fees.map((fee) => fee.id);
@@ -77,7 +107,13 @@ async function getClassFeeConfiguration(id: string) {
     class: {
       id: schoolClass.id,
       name: schoolClass.name,
-      level: schoolClass.level,
+      code: schoolClass.code,
+      level: schoolClass.level.name,
+      levelId: schoolClass.levelId,
+      section: schoolClass.section,
+      orientation: schoolClass.orientation,
+      capacity: schoolClass.capacity,
+      status: schoolClass.status,
       schoolYear: schoolClass.schoolYear.name,
     },
     currency: feeRows[0]?.currency ?? 'USD',
@@ -97,10 +133,20 @@ router.get(
   requirePermission('classes:read'),
   asyncHandler(async (_req, res) => {
     const classes = await prisma.class.findMany({
-      include: { schoolYear: true },
+      include: { schoolYear: true, level: true, teacher: { select: { id: true, firstName: true, lastName: true } } },
       orderBy: { createdAt: 'desc' },
     });
-    res.json(classes);
+    const serialized = classes.map((schoolClass) => ({
+      ...schoolClass,
+      level: schoolClass.level.name,
+      levelId: schoolClass.levelId,
+      teacher: schoolClass.teacher ? {
+        id: schoolClass.teacher.id,
+        firstName: schoolClass.teacher.firstName,
+        lastName: schoolClass.teacher.lastName,
+      } : null,
+    }));
+    res.json(serialized);
   })
 );
 
@@ -119,10 +165,19 @@ router.get(
   asyncHandler(async (req, res) => {
     const schoolClass = await prisma.class.findUnique({
       where: { id: req.params.id },
-      include: { schoolYear: true, students: true, fees: true },
+      include: { schoolYear: true, level: true, students: true, fees: true, teacher: { select: { id: true, firstName: true, lastName: true } } },
     });
     if (!schoolClass) throw new ApiError(404, 'Classe introuvable.');
-    res.json(schoolClass);
+    res.json({
+      ...schoolClass,
+      level: schoolClass.level.name,
+      levelId: schoolClass.levelId,
+      teacher: schoolClass.teacher ? {
+        id: schoolClass.teacher.id,
+        firstName: schoolClass.teacher.firstName,
+        lastName: schoolClass.teacher.lastName,
+      } : null,
+    });
   })
 );
 
@@ -131,17 +186,43 @@ router.use(requirePermission('classes:manage'));
 router.post(
   '/',
   asyncHandler(async (req, res) => {
-    const data = classSchema.parse(req.body);
-    const created = await prisma.class.create({ data, include: { schoolYear: true } });
+    const payload = classSchema.parse(req.body);
+    const data = normalizeClassPayload({
+      ...payload,
+      code: payload.code,
+      levelId: payload.levelId,
+      schoolYearId: payload.schoolYearId,
+    });
+    const created = await prisma.class.create({
+      data,
+      include: { schoolYear: true, level: true, teacher: { select: { id: true, firstName: true, lastName: true } } },
+    });
     await recordAudit(req, {
       action: 'CREATE',
       module: 'Classes',
       entityType: 'Class',
       entityId: created.id,
       description: `Classe "${created.name}" créée.`,
-      metadata: { level: created.level, schoolYear: created.schoolYear.name },
+      metadata: { 
+        code: created.code, 
+        level: created.level.name, 
+        section: created.section,
+        orientation: created.orientation,
+        status: created.status,
+        schoolYear: created.schoolYear.name,
+        teacherId: created.teacherId,
+        capacity: created.capacity 
+      },
     });
-    res.status(201).json(created);
+    res.status(201).json({
+      ...created,
+      level: created.level.name,
+      teacher: created.teacher ? {
+        id: created.teacher.id,
+        firstName: created.teacher.firstName,
+        lastName: created.teacher.lastName,
+      } : null,
+    });
   })
 );
 
@@ -149,11 +230,29 @@ router.put(
   '/:id',
   asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const data = classSchema.partial().parse(req.body);
+    const incoming = classUpdateSchema.parse(req.body);
+    const current = await prisma.class.findUnique({
+      where: { id },
+      include: { level: true, teacher: { select: { id: true, firstName: true, lastName: true } } },
+    });
+    if (!current) throw new ApiError(404, 'Classe introuvable.');
+
+    const data = {
+      ...(incoming.code !== undefined ? { code: incoming.code } : {}),
+      ...(incoming.name !== undefined ? { name: incoming.name } : {}),
+      ...(incoming.levelId !== undefined ? { levelId: incoming.levelId } : {}),
+      ...(incoming.schoolYearId !== undefined ? { schoolYearId: incoming.schoolYearId } : {}),
+      ...(incoming.section !== undefined ? { section: incoming.section } : {}),
+      ...(incoming.orientation !== undefined ? { orientation: incoming.orientation } : {}),
+      ...(incoming.capacity !== undefined ? { capacity: incoming.capacity } : {}),
+      ...(incoming.status !== undefined ? { status: incoming.status } : {}),
+      ...(incoming.teacherId !== undefined ? { teacherId: incoming.teacherId } : {}),
+    };
+
     const updated = await prisma.class.update({
       where: { id },
       data,
-      include: { schoolYear: true },
+      include: { schoolYear: true, level: true, teacher: { select: { id: true, firstName: true, lastName: true } } },
     });
     await recordAudit(req, {
       action: 'UPDATE',
@@ -161,9 +260,26 @@ router.put(
       entityType: 'Class',
       entityId: updated.id,
       description: `Classe "${updated.name}" modifiée.`,
-      metadata: { level: updated.level, schoolYear: updated.schoolYear.name },
+      metadata: { 
+        code: updated.code, 
+        level: updated.level.name, 
+        section: updated.section,
+        orientation: updated.orientation,
+        status: updated.status,
+        schoolYear: updated.schoolYear.name,
+        teacherId: updated.teacherId,
+        capacity: updated.capacity 
+      },
     });
-    res.json(updated);
+    res.json({
+      ...updated,
+      level: updated.level.name,
+      teacher: updated.teacher ? {
+        id: updated.teacher.id,
+        firstName: updated.teacher.firstName,
+        lastName: updated.teacher.lastName,
+      } : null,
+    });
   })
 );
 
@@ -178,7 +294,15 @@ router.delete(
       entityType: 'Class',
       entityId: deleted.id,
       description: `Classe "${deleted.name}" supprimée.`,
-      metadata: { level: deleted.level },
+      metadata: { 
+        code: deleted.code, 
+        levelId: deleted.levelId, 
+        section: deleted.section,
+        orientation: deleted.orientation,
+        status: deleted.status,
+        teacherId: deleted.teacherId,
+        capacity: deleted.capacity 
+      },
     });
     res.status(204).send();
   })

@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { loginResponseSchema, loginSchema, type LoginResponse } from '@school-fees/contracts';
+
 export function LoginPage({ onLogin }: { onLogin: () => void }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -11,13 +13,14 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
     setIsSubmitting(true);
 
     try {
+      const credentials = loginSchema.parse({ username, password });
       const response = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(credentials),
       });
       const responseText = await response.text();
-      let data: { token?: string; user?: unknown; message?: string } = {};
+      let data: { message?: string } & Partial<LoginResponse> = {};
       if (responseText.trim()) {
         try {
           data = JSON.parse(responseText) as typeof data;
@@ -30,12 +33,11 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
         throw new Error(data.message ?? 'Identifiants invalides.');
       }
 
-      if (!data.token || !data.user) {
-        throw new Error('Réponse de connexion incomplète. Vérifiez la configuration de l’API.');
-      }
+      const parsedData = loginResponseSchema.safeParse(data);
+      if (!parsedData.success) throw new Error('Réponse de connexion invalide. Vérifiez la version de l’API.');
 
-      localStorage.setItem('school-fees-token', data.token);
-      localStorage.setItem('school-fees-user', JSON.stringify(data.user));
+      localStorage.setItem('school-fees-token', parsedData.data.token);
+      localStorage.setItem('school-fees-user', JSON.stringify(parsedData.data.user));
       onLogin();
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Connexion impossible.');

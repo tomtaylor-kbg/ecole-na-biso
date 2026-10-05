@@ -41,13 +41,14 @@ export function HelpPage() {
         <h3>Scolarité</h3>
         <ul>
           <li><strong>Années scolaires.</strong> Définissez les dates de la période académique. Une seule année peut être active à la fois.</li>
-          <li><strong>Classes.</strong> Regroupez les élèves par niveau et appliquez les frais collectifs à une promotion.</li>
+          <li><strong>Classes.</strong> Regroupez les élèves par niveau et appliquez les frais collectifs à une promotion. Chaque classe secondaire doit aussi avoir une orientation : Scientifique, Mécanique, Littéraire, Commerciale, Technique, Générale ou Cycle de base. Les classes peuvent avoir une section (A, B, C, D) et un statut (Active, Inactive, Archivée).</li>
           <li><strong>Élèves.</strong> Chaque fiche utilise un matricule unique et affiche le total dû, le montant payé et le reste à payer.</li>
         </ul>
 
         <h3>Frais et paiements</h3>
         <ul>
-          <li><strong>Frais scolaires.</strong> Créez les rubriques, leur montant, leur devise et leur portée (classe ou élève).</li>
+          <li><strong>Frais scolaires.</strong> Créez les rubriques, leur montant, leur devise et leur portée (classe ou élève). Pour le suivi mensuel, créez un frais actif nommé « Minerval » par échéance et indiquez sa date d’échéance; le rapport identifie le mois à partir de cette date.</li>
+          <li><strong>Suivi du minerval.</strong> Un frais individuel remplace le frais de classe ou global pour l’élève concerné; un frais de classe remplace le frais global. Les élèves sans minerval configuré apparaissent séparément et ne sont pas comptés comme débiteurs.</li>
           <li><strong>Paiements.</strong> Enregistrez les versements en espèces, Mobile Money, banque, virement ou autre, avec une référence si nécessaire.</li>
           <li><strong>Acomptes.</strong> Un frais peut être réglé en plusieurs fois ; le solde est recalculé après chaque versement.</li>
           <li><strong>Reçus.</strong> Un reçu numéroté est généré automatiquement et peut être imprimé immédiatement.</li>
@@ -59,7 +60,7 @@ export function HelpPage() {
           <li><strong>Paramètres.</strong> Personnalisez les coordonnées de l’école, la devise, le préfixe des reçus et la couleur principale.</li>
           <li><strong>Journal d’audit.</strong> Consultez les actions sensibles avec leur date, leur auteur et leur détail.</li>
           <li><strong>Mobile Money.</strong> Choisissez le mode correspondant et saisissez le code de transaction dans le champ Référence.</li>
-          <li><strong>Impayés.</strong> La rubrique <strong>Soldes</strong> affiche la situation de chaque élève.</li>
+          <li><strong>Impayés.</strong> La rubrique <strong>Suivi financier</strong> affiche la situation mensuelle du minerval et les restes à payer par classe; elle distingue les paiements complets, les paiements partiels d’au moins 50 % et les paiements inférieurs à 50 %.</li>
           <li><strong>Paiement erroné.</strong> Un administrateur doit annuler le paiement avec un motif, puis enregistrer le montant correct.</li>
           <li><strong>Élève inactif.</strong> Un élève ayant des paiements ne peut pas être supprimé ; passez son statut à Inactif.</li>
         </ul>

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { recordAudit } from '../lib/audit.js';
+import { classLabel } from '../lib/classLabel.js';
 import { prisma } from '../lib/prisma.js';
 import { ApiError, asyncHandler } from '../lib/errors.js';
 import { requirePermission } from '../middleware/auth.js';
@@ -103,7 +104,7 @@ async function getStudentFinancialSituation(id: string) {
       matricule: student.matricule,
       firstName: student.firstName,
       lastName: student.lastName,
-      className: student.class.name,
+      className: classLabel(student.class),
       schoolYear: student.schoolYear.name,
     },
     currency: feeRows[0]?.currency ?? 'USD',
@@ -185,7 +186,7 @@ router.post(
       entityType: 'Student',
       entityId: student.id,
       description: `Élève ${student.lastName} ${student.firstName} créé avec le matricule ${student.matricule}.`,
-      metadata: { matricule: student.matricule, class: student.class.name, schoolYear: student.schoolYear.name },
+      metadata: { matricule: student.matricule, class: classLabel(student.class), schoolYear: student.schoolYear.name },
     });
     res.status(201).json(student);
   })
@@ -207,7 +208,7 @@ router.put(
       entityType: 'Student',
       entityId: student.id,
       description: `Élève ${student.lastName} ${student.firstName} modifié.`,
-      metadata: { matricule: student.matricule, class: student.class.name, schoolYear: student.schoolYear.name },
+      metadata: { matricule: student.matricule, class: classLabel(student.class), schoolYear: student.schoolYear.name },
     });
     res.json(student);
   })

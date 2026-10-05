@@ -1,4 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
+import type { ClassOrientation, ClassSection, ClassStatus, UserRole } from '@school-fees/contracts';
+
+export type { ClassOrientation, ClassSection, ClassStatus, UserRole } from '@school-fees/contracts';
 
 export type OverlayType = 'student' | 'class' | 'payment' | 'fee' | 'school-year' | 'user';
 export type BadgeTone = 'success' | 'warning' | 'neutral' | 'danger';
@@ -83,8 +86,14 @@ export type StudentFinancialSituation = {
 export type ClassFeeConfiguration = {
   class: {
     id: string;
+    code: string;
     name: string;
     level: string;
+    levelId: string;
+    section: ClassSection;
+    orientation?: ClassOrientation | null;
+    capacity?: number | null;
+    status: ClassStatus;
     schoolYear: string;
   };
   currency: string;
@@ -159,7 +168,12 @@ export type BalanceReport = {
     };
     class: {
       id: string;
+      code: string;
       name: string;
+      section: ClassSection;
+      orientation?: ClassOrientation | null;
+      capacity?: number | null;
+      status: ClassStatus;
     };
     schoolYear: {
       id: string;
@@ -170,6 +184,89 @@ export type BalanceReport = {
     balance: number;
     currency?: string;
     status: 'paid' | 'partial' | 'unpaid';
+  }>;
+};
+
+export type MonthlyMinervalReport = {
+  month: string;
+  schoolYear: { id: string; name: string };
+  summary: {
+    studentCount: number;
+    studentsPaid: number;
+    studentsAtLeastHalf: number;
+    studentsInDebt: number;
+    studentsMissingFee: number;
+    totalsByCurrency: Array<{
+      currency: string;
+      studentCount: number;
+      totalDue: number;
+      totalPaid: number;
+      balance: number;
+    }>;
+  };
+  classes: Array<{
+    class: { 
+      id: string; 
+      name: string; 
+      code: string;
+      section: ClassSection;
+      orientation?: ClassOrientation | null;
+      capacity?: number | null;
+      status: ClassStatus;
+    };
+    currency: string;
+    studentCount: number;
+    configuredStudentCount: number;
+    studentsMissingFee: number;
+    studentsPaid: number;
+    studentsAtLeastHalf: number;
+    studentsInDebt: number;
+    totalDue: number;
+    totalPaid: number;
+    balance: number;
+  }>;
+  rows: Array<{
+    student: {
+      id: string;
+      matricule: string;
+      firstName: string;
+      lastName: string;
+    };
+    class: { 
+      id: string; 
+      name: string; 
+      code: string;
+      section: ClassSection;
+      orientation?: ClassOrientation | null;
+    };
+    totalDue: number;
+    totalPaid: number;
+    balance: number;
+    percentagePaid: number;
+    currency: string;
+    status: 'paid' | 'half' | 'debt' | 'missing-fee';
+  }>;
+};
+
+export type FinancialReport = {
+  period: 'day' | 'month';
+  date: string;
+  from: string;
+  to: string;
+  summary: { paymentCount: number; totalAmount: number };
+  byCurrency: Array<{ currency: string; paymentCount: number; amount: number }>;
+  byMode: Array<{ mode: string; paymentCount: number; amount: number }>;
+  timeline: Array<{ date: string; paymentCount: number; amount: number }>;
+  payments: Array<{
+    id: string;
+    amount: number;
+    currency: string;
+    paymentDate: string;
+    paymentMode: string;
+    receiptNumber?: string | null;
+    feeName: string;
+    student: string;
+    className: string;
   }>;
 };
 
@@ -201,7 +298,12 @@ export type DashboardData = {
     };
     class: {
       id: string;
+      code: string;
       name: string;
+      section: ClassSection;
+      orientation?: ClassOrientation | null;
+      capacity?: number | null;
+      status: ClassStatus;
     };
     totalDue: number;
     totalPaid: number;
@@ -221,15 +323,31 @@ export type ApiStudent = {
   matricule: string;
   lastName: string;
   firstName: string;
-  class?: { id: string; name: string } | null;
+  class?: { 
+    id: string; 
+    code: string;
+    name: string;
+    section: ClassSection;
+    orientation?: ClassOrientation | null;
+    capacity?: number | null;
+    status: ClassStatus;
+  } | null;
 };
 
 export type ApiClass = {
   id: string;
+  code: string;
   name: string;
   level: string;
-  schoolYearId?: string;
+  levelId: string;
+  section: ClassSection;
+  orientation?: ClassOrientation | null;
+  capacity?: number | null;
+  status: ClassStatus;
+  schoolYearId: string;
   schoolYear?: { name: string } | null;
+  teacherId?: string | null;
+  teacher?: { id: string; firstName: string; lastName: string } | null;
 };
 
 export type ApiFee = {
@@ -238,10 +356,19 @@ export type ApiFee = {
   amount: string | number;
   currency: string;
   status: string;
+  dueDate?: string | null;
   schoolYearId?: string;
   classId?: string | null;
   studentId?: string | null;
-  class?: { name: string } | null;
+  class?: { 
+    id: string;
+    code: string;
+    name: string;
+    section: ClassSection;
+    orientation?: ClassOrientation | null;
+    capacity?: number | null;
+    status: ClassStatus;
+  } | null;
   student?: { id?: string; lastName: string; firstName: string } | null;
 };
 
@@ -272,10 +399,11 @@ export type ApiSchoolYear = {
 export type ApiUser = {
   id: string;
   username: string;
-  email: string;
+  email: string | null;
+  phone: string | null;
   firstName: string;
   lastName: string;
-  role: string;
+  role: UserRole;
 };
 
 export type ApiUserRole = {
@@ -322,8 +450,14 @@ export type PageCard = {
 
 export type LookupClass = {
   id: string;
+  code: string;
   name: string;
   level: string;
+  levelId: string;
+  section: ClassSection;
+  orientation?: ClassOrientation | null;
+  capacity?: number | null;
+  status: ClassStatus;
 };
 
 export type LookupSchoolYear = {

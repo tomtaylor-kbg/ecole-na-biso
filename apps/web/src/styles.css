@@ -361,6 +361,67 @@ h1 {
   color: var(--text);
 }
 
+.minerval-filter-panel {
+  margin-bottom: 0.75rem;
+}
+
+.balances-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.balances-page .page-subtitle {
+  margin-bottom: 0;
+}
+
+.balances-page .panel {
+  padding: 0.85rem 1rem;
+}
+
+.balances-page .panel-header {
+  margin-bottom: 0.65rem;
+}
+
+.minerval-filter-header {
+  align-items: flex-start;
+}
+
+.minerval-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+  width: min(100%, 62rem);
+}
+
+.minerval-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.minerval-filters input,
+.minerval-filters select {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.7rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  background: var(--surface-alt);
+  color: var(--text);
+}
+
+.minerval-filters input:focus,
+.minerval-filters select:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
 .panel-header h2,
 .panel-header h3 {
   font-size: 1.05rem;
@@ -805,6 +866,205 @@ tbody tr:hover {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
   margin-bottom: 1rem;
+}
+
+.minerval-count-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.minerval-count-cards .stat-card {
+  min-width: 0;
+}
+
+.minerval-count-cards .stat-card strong {
+  overflow-wrap: anywhere;
+}
+
+.minerval-count-cards .stat-card small {
+  color: var(--text-muted);
+}
+
+.minerval-amount-cards .mini-card small {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.minerval-amount-cards .mini-card small svg {
+  color: var(--accent);
+}
+
+.balances-page .overview-cards {
+  gap: 0.75rem;
+  margin-bottom: 0;
+}
+
+.balances-page .stat-card,
+.balances-page .mini-card {
+  padding: 0.85rem 1rem;
+}
+
+.financial-report-panel {
+  border-color: var(--accent);
+}
+
+.financial-report-header {
+  align-items: center;
+}
+
+.financial-report-header .eyebrow {
+  margin-bottom: 0.2rem;
+}
+
+.report-print-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.financial-report-filters {
+  display: flex;
+  gap: 0.65rem;
+  margin-bottom: 0.8rem;
+}
+
+.financial-report-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.financial-report-filters input,
+.financial-report-filters select {
+  min-height: 2.35rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+  background: var(--surface-alt);
+  color: var(--text);
+}
+
+.financial-report-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+}
+
+.financial-report-summary article {
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.7rem;
+  background: var(--bg-soft);
+}
+
+.financial-report-summary span,
+.report-list-row small {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+.financial-report-summary strong {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 1.15rem;
+}
+
+.financial-report-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.financial-report-columns h4 {
+  margin-bottom: 0.45rem;
+  font-size: 0.86rem;
+}
+
+.report-list {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.report-list-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.report-list-row span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+@media print {
+  .sidebar,
+  .topbar,
+  .page-header,
+  .page-subtitle,
+  .minerval-filter-panel,
+  .report-print-button,
+  .financial-report-filters,
+  .minerval-count-cards,
+  .minerval-amount-cards,
+  .minerval-notice,
+  .balances-page > .panel:not(.financial-report-panel) {
+    display: none !important;
+  }
+
+  .main-panel {
+    margin: 0;
+    padding: 0;
+  }
+
+  .balances-page {
+    display: block;
+  }
+
+  .financial-report-panel {
+    border: 0;
+    box-shadow: none;
+  }
+}
+
+.balances-page th,
+.balances-page td {
+  padding-top: 0.65rem;
+  padding-bottom: 0.65rem;
+}
+
+.minerval-report-context {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.minerval-report-table {
+  min-width: 1050px;
+}
+
+.minerval-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--warning);
+  border-radius: 0.8rem;
+  background: var(--warning-soft);
+  color: var(--text);
+}
+
+.minerval-notice svg {
+  flex: 0 0 auto;
+  color: var(--warning);
 }
 
 .mini-card {
@@ -1299,14 +1559,25 @@ tbody tr:hover {
   }
 
   .stats-grid,
+  .minerval-count-cards,
   .overview-cards,
   .content-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .minerval-filter-header {
+    flex-direction: column;
+  }
+
+  .minerval-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
   }
 }
 
 @media (max-width: 640px) {
   .stats-grid,
+  .minerval-count-cards,
   .overview-cards,
   .content-grid,
   .financial-summary,
@@ -1322,8 +1593,17 @@ tbody tr:hover {
 
   .page-header-actions,
   .topbar-actions,
-  .filters-row {
+  .filters-row,
+  .minerval-filters {
     width: 100%;
+  }
+
+  .minerval-filter-header {
+    flex-direction: column;
+  }
+
+  .minerval-filters {
+    grid-template-columns: 1fr 1fr;
   }
 
   .table-panel-header {
@@ -1337,7 +1617,9 @@ tbody tr:hover {
     width: 100%;
   }
 
-  .filters-row select {
+  .filters-row select,
+  .minerval-filters input,
+  .minerval-filters select {
     width: 100%;
   }
 

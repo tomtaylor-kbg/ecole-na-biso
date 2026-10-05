@@ -13,6 +13,36 @@ enum Role {
   CAISSIER
 }
 
+enum Cycle {
+  MATERNELLE
+  PRIMAIRE
+  SECONDAIRE
+}
+
+enum ClassStatus {
+  ACTIVE
+  ARCHIVED
+  INACTIVE
+}
+
+enum ClassSection {
+  A
+  B
+  C
+  D
+  UNIQUE
+}
+
+enum ClassOrientation {
+  SCIENTIFIQUE
+  MECANIQUE
+  CYCLE_DE_BASE
+  LITTERAIRE
+  COMMERCIALE
+  TECHNIQUE
+  GENERALE
+}
+
 model SchoolYear {
   id        String   @id @default(cuid())
   name      String
@@ -27,19 +57,51 @@ model SchoolYear {
   students Student[]
 }
 
+model Level {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  cycle       Cycle
+  order       Int
+  description String?
+  status      ClassStatus @default(ACTIVE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  classes Class[]
+  fees    Fee[]
+
+  @@index([cycle, order])
+  @@index([status])
+}
+
 model Class {
-  id           String   @id @default(cuid())
+  id           String       @id @default(cuid())
+  code         String
   name         String
-  level        String
+  section      ClassSection @default(UNIQUE)
+  orientation  ClassOrientation?
+  capacity     Int?
+  status       ClassStatus   @default(ACTIVE)
+  levelId      String
   schoolYearId String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  teacherId    String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
-  schoolYear SchoolYear @relation(fields: [schoolYearId], references: [id])
-  students   Student[]
-  fees       Fee[]
+  level       Level        @relation(fields: [levelId], references: [id])
+  schoolYear  SchoolYear  @relation(fields: [schoolYearId], references: [id])
+  teacher      User?        @relation(fields: [teacherId], references: [id])
+  students    Student[]
+  fees        Fee[]
 
+  @@unique([schoolYearId, code])
   @@index([schoolYearId])
+  @@index([levelId])
+  @@index([orientation])
+  @@index([status])
+  @@index([teacherId])
+  @@index([schoolYearId, levelId])
 }
 
 model Student {
@@ -77,17 +139,20 @@ model Fee {
   schoolYearId String
   classId      String?
   studentId    String?
+  levelId      String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
   schoolYear SchoolYear @relation(fields: [schoolYearId], references: [id])
   class      Class?     @relation(fields: [classId], references: [id])
   student    Student?   @relation(fields: [studentId], references: [id])
+  level      Level?     @relation(fields: [levelId], references: [id])
   payments   Payment[]
 
   @@index([schoolYearId])
   @@index([classId])
   @@index([studentId])
+  @@index([levelId])
   @@index([status])
 }
 
@@ -122,7 +187,8 @@ model Payment {
 model User {
   id        String   @id @default(cuid())
   username  String   @unique
-  email     String   @unique
+  email     String?  @unique
+  phone     String?
   password  String
   firstName String
   lastName  String
@@ -131,6 +197,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   payments  Payment[]
+  taughtClasses Class[]
   auditLogs AuditLog[]
 }
 

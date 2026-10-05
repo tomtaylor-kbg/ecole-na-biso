@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { feeInputSchema } from '@school-fees/contracts';
 import { recordAudit } from '../lib/audit.js';
 import { prisma } from '../lib/prisma.js';
 import { ApiError, asyncHandler } from '../lib/errors.js';
@@ -7,16 +8,7 @@ import { requirePermission } from '../middleware/auth.js';
 
 const router = Router();
 
-const feeSchema = z.object({
-  name: z.string().min(2),
-  amount: z.coerce.number().positive(),
-  currency: z.string().min(2).max(8).optional(),
-  dueDate: z.coerce.date().optional().nullable(),
-  status: z.string().default('active'),
-  schoolYearId: z.string().min(1),
-  classId: z.string().optional().nullable(),
-  studentId: z.string().optional().nullable(),
-});
+const feeSchema = feeInputSchema;
 const feeCurrency = (fee: unknown) => (fee as { currency?: string | null }).currency ?? 'USD';
 
 router.get(

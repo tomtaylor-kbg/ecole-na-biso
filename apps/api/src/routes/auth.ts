@@ -26,7 +26,7 @@ router.post(
 
     const token = signToken({
       sub: user.id,
-      email: user.email,
+      email: user.email ?? '',
       role: user.role,
     });
 
@@ -36,6 +36,7 @@ router.post(
         id: user.id,
         username: user.username,
         email: user.email,
+        phone: user.phone,
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,

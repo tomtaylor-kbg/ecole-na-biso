@@ -7,9 +7,12 @@
     "packages/*"
   ],
   "scripts": {
-    "dev":"npm run dev -w apps/web & npm run dev -w apps/api",
+    "dev":"npm run db:deploy && npm run dev -w apps/web & npm run dev:api",
     "dev:web": "npm run dev -w apps/web",
-    "dev:api": "npm run dev -w apps/api",
+    "dev:api": "npm run db:deploy -w packages/database && npm run dev -w apps/api",
+    "db:validate": "npm run db:validate -w packages/database",
+    "db:deploy": "npm run db:deploy -w packages/database",
+    "check": "npm run db:validate && npm run build:api && npm run build:web",
     "build:web": "npm run build -w apps/web",
     "build:api": "npm run build -w apps/api",
     "start:web": "npm run preview -w apps/web -- --host 0.0.0.0 --port 5173",

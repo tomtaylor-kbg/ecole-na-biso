@@ -3,6 +3,7 @@ import { BrowserRouter, NavLink, Route, Routes } from 'react-router-dom';
 import { AlertTriangle, BadgeDollarSign, Building2, CalendarRange, CircleHelp, ClipboardList, CreditCard, GraduationCap, LayoutDashboard, LogOut, Moon, ReceiptText, Settings, Sun, Users, WalletCards } from 'lucide-react';
 import { AuditLogsPage } from './components/AuditLogsPage';
 import { BalancesPage } from './components/BalancesPage';
+import { classLabel, classOrientationLabel, classSectionLabel, classStatusLabel } from './components/classLabels';
 import { CreationOverlay } from './components/CreationOverlay';
 import { DashboardPage } from './components/DashboardPage';
 import { DetailOverlay } from './components/DetailOverlay';
@@ -22,7 +23,7 @@ type AppData = { students: ApiStudent[]; classes: ApiClass[]; fees: ApiFee[]; pa
 
 const apiUrl = import.meta.env.VITE_API_URL ?? '';
 const navItems: NavItem[] = [
-  { label: 'Dashboard', to: '/', icon: LayoutDashboard }, { label: 'Élèves', to: '/students', icon: GraduationCap }, { label: 'Classes', to: '/classes', icon: Building2 }, { label: 'Frais scolaires', to: '/fees', icon: BadgeDollarSign }, { label: 'Paiements', to: '/payments', icon: CreditCard }, { label: 'Soldes', to: '/balances', icon: ReceiptText }, { label: 'Années scolaires', to: '/school-years', icon: CalendarRange }, { label: 'Utilisateurs', to: '/users', icon: Users }, { label: 'Journal', to: '/audit-logs', icon: ClipboardList }, { label: 'Aide', to: '/help', icon: CircleHelp }, { label: 'Paramètres', to: '/settings', icon: Settings },
+  { label: 'Dashboard', to: '/', icon: LayoutDashboard }, { label: 'Élèves', to: '/students', icon: GraduationCap }, { label: 'Classes', to: '/classes', icon: Building2 }, { label: 'Frais scolaires', to: '/fees', icon: BadgeDollarSign }, { label: 'Paiements', to: '/payments', icon: CreditCard }, { label: 'Suivi financier', to: '/balances', icon: ReceiptText }, { label: 'Années scolaires', to: '/school-years', icon: CalendarRange }, { label: 'Utilisateurs', to: '/users', icon: Users }, { label: 'Journal', to: '/audit-logs', icon: ClipboardList }, { label: 'Aide', to: '/help', icon: CircleHelp }, { label: 'Paramètres', to: '/settings', icon: Settings },
 ];
 const emptyData: AppData = { students: [], classes: [], fees: [], payments: [], schoolYears: [], users: [] };
 
@@ -150,12 +151,12 @@ function App() {
     }
   };
   const rowsFor = (kind: string): { rows: ListRow[]; headings: string[] } => {
-    if (kind === 'students') return { headings: ['Matricule', 'Nom complet', 'Classe'], rows: data.students.map((student) => ({ id: student.id, source: student, cells: [student.matricule, fullName(student), student.class?.name ?? 'Sans classe'], status: { label: 'Actif', tone: 'success' } })) };
-    if (kind === 'classes') return { headings: ['Classe', 'Niveau', 'Année scolaire'], rows: data.classes.map((schoolClass) => ({ id: schoolClass.id, source: schoolClass, cells: [schoolClass.name, schoolClass.level, schoolClass.schoolYear?.name ?? 'Non définie'], status: { label: 'Active', tone: 'success' } })) };
-    if (kind === 'fees') return { headings: ['Frais', 'Montant', 'Bénéficiaire'], rows: data.fees.map((fee) => ({ id: fee.id, source: fee, cells: [fee.name, formatMoney(Number(fee.amount), fee.currency), fee.student ? fullName(fee.student) : fee.class?.name ?? 'Tous'], status: { label: fee.status, tone: fee.status === 'active' ? 'success' : 'neutral' } })) };
+    if (kind === 'students') return { headings: ['Matricule', 'Nom complet', 'Classe'], rows: data.students.map((student) => ({ id: student.id, source: student, cells: [student.matricule, fullName(student), student.class ? classLabel(student.class) : 'Sans classe'], status: { label: 'Actif', tone: 'success' } })) };
+    if (kind === 'classes') return { headings: ['Code', 'Classe', 'Section', 'Orientation', 'Statut', 'Année scolaire'], rows: data.classes.map((schoolClass) => ({ id: schoolClass.id, source: schoolClass, cells: [schoolClass.code, schoolClass.name, classSectionLabel(schoolClass.section) || '—', classOrientationLabel(schoolClass.orientation) || '—', classStatusLabel(schoolClass.status), schoolClass.schoolYear?.name ?? 'Non définie'], status: { label: classStatusLabel(schoolClass.status), tone: schoolClass.status === 'ACTIVE' ? 'success' : schoolClass.status === 'INACTIVE' ? 'neutral' : 'danger' } })) };
+    if (kind === 'fees') return { headings: ['Frais', 'Montant', 'Bénéficiaire'], rows: data.fees.map((fee) => ({ id: fee.id, source: fee, cells: [fee.name, formatMoney(Number(fee.amount), fee.currency), fee.student ? fullName(fee.student) : fee.class ? classLabel(fee.class) : 'Tous'], status: { label: fee.status, tone: fee.status === 'active' ? 'success' : 'neutral' } })) };
     if (kind === 'payments') return { headings: ['Élève', 'Montant', 'Mode', 'Date'], rows: data.payments.map((payment) => ({ id: payment.id, source: payment, cells: [fullName(payment.student), formatMoney(Number(payment.amount), payment.fee.currency ?? settings?.currency), payment.paymentMode, formatDate(payment.paymentDate)], status: payment.status === 'cancelled' ? { label: 'Annulé', tone: 'danger' } : { label: payment.fee.name, tone: 'success' } })) };
     if (kind === 'school-years') return { headings: ['Année', 'Début', 'Fin'], rows: data.schoolYears.map((year) => ({ id: year.id, source: year, cells: [year.name, formatDate(year.startDate), formatDate(year.endDate)], status: { label: year.isActive ? 'Active' : 'Archivée', tone: year.isActive ? 'success' : 'neutral' } })) };
-    return { headings: ['Username', 'Email', 'Nom', 'Rôle'], rows: data.users.map((user) => ({ id: user.id, source: user, cells: [user.username, user.email, fullName(user), roleLabel(user.role)], status: { label: 'Actif', tone: 'success' } })) };
+    return { headings: ['Username', 'Email', 'Téléphone', 'Nom', 'Rôle'], rows: data.users.map((user) => ({ id: user.id, source: user, cells: [user.username, user.email ?? '—', user.phone ?? '—', fullName(user), roleLabel(user.role)], status: { label: 'Actif', tone: 'success' } })) };
   };
 
   const openStudentDetail = (studentId: string) => {
@@ -167,7 +168,7 @@ function App() {
       row: {
         id: student.id,
         source: student,
-        cells: [student.matricule, fullName(student), student.class?.name ?? 'Sans classe'],
+        cells: [student.matricule, fullName(student), student.class ? classLabel(student.class) : 'Sans classe'],
         status: { label: 'Actif', tone: 'success' },
       },
     });
@@ -190,7 +191,7 @@ function App() {
     <main className="main-panel"><header className="topbar"><div><p className="eyebrow">Gestion scolaire</p><h1>Bonjour, {currentUser?.firstName ?? 'Admin'}</h1></div><div className="topbar-actions"><button type="button" className="theme-toggle" onClick={() => setTheme((current) => current === 'light' ? 'dark' : 'light')} aria-label="Basculer le thème">{theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}</button></div></header>
       {isLoading ? <div className="panel loading-state">Chargement des données...</div> : error ? <div className="panel form-error" role="alert">{error}</div> : <Routes>
         <Route path="/" element={<DashboardPage stats={stats} dashboard={dashboard} formatMoney={formatMoney} formatDate={formatDate} />} />
-        <Route path="/balances" element={<BalancesPage classes={data.classes} onViewStudent={openStudentDetail} />} />
+        <Route path="/balances" element={<BalancesPage classes={data.classes} schoolYears={data.schoolYears} onViewStudent={openStudentDetail} />} />
         {can('audit:read') && <Route path="/audit-logs" element={<AuditLogsPage />} />}
         {can('users:manage') && <Route path="/help" element={<HelpPage />} />}
         {can('settings:manage') && <Route path="/settings" element={<SettingsPage settings={settings} onSaved={setSettings} onReset={() => { setSettings(null); setData(emptyData); setDashboard(null); setSetupRequired(true); }} />} />}

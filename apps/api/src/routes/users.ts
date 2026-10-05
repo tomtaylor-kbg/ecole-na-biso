@@ -11,7 +11,8 @@ const router = Router();
 
 const userSchema = z.object({
   username: z.string().min(3),
-  email: z.string().email(),
+  email: z.preprocess((value) => value === '' ? null : value, z.string().email().nullable().optional()),
+  phone: z.preprocess((value) => value === '' ? null : value, z.string().trim().max(30).nullable().optional()),
   password: z.string().min(6),
   firstName: z.string().min(2),
   lastName: z.string().min(2),
@@ -38,6 +39,7 @@ router.get(
         id: true,
         username: true,
         email: true,
+        phone: true,
         firstName: true,
         lastName: true,
         role: true,
@@ -58,6 +60,7 @@ router.get(
         id: true,
         username: true,
         email: true,
+        phone: true,
         firstName: true,
         lastName: true,
         role: true,
@@ -74,7 +77,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const data = userSchema.parse(req.body);
     const existingUser = await prisma.user.findFirst({
-      where: { OR: [{ email: data.email }, { username: data.username }] },
+      where: { OR: [...(data.email ? [{ email: data.email }] : []), { username: data.username }] },
     });
 
     if (existingUser) {
@@ -86,7 +89,8 @@ router.post(
     const user = await prisma.user.create({
       data: {
         username: data.username,
-        email: data.email,
+        email: data.email ?? null,
+        phone: data.phone ?? null,
         password: passwordHash,
         firstName: data.firstName,
         lastName: data.lastName,
@@ -134,12 +138,15 @@ router.put(
       where: { id: req.params.id },
       data: {
         ...data,
+        email: data.email,
+        phone: data.phone,
         password: data.password ? await bcrypt.hash(data.password, 10) : undefined,
       },
       select: {
         id: true,
         username: true,
         email: true,
+        phone: true,
         firstName: true,
         lastName: true,
         role: true,

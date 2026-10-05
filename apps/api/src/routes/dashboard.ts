@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { classLabel } from '../lib/classLabel.js';
 import { prisma } from '../lib/prisma.js';
 import { asyncHandler } from '../lib/errors.js';
 import { requirePermission } from '../middleware/auth.js';
@@ -81,7 +82,7 @@ router.get(
         },
         class: {
           id: student.class.id,
-          name: student.class.name,
+          name: classLabel(student.class),
         },
         totalDue,
         totalPaid,

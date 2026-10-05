@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import type { Fee } from '@prisma/client';
 import { recordAudit } from '../lib/audit.js';
+import { classLabel } from '../lib/classLabel.js';
 import { prisma } from '../lib/prisma.js';
 import { ApiError, asyncHandler } from '../lib/errors.js';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
@@ -111,7 +112,7 @@ router.get(
         matricule: payment.student.matricule,
         firstName: payment.student.firstName,
         lastName: payment.student.lastName,
-        className: payment.student.class.name,
+        className: classLabel(payment.student.class),
         schoolYear: payment.student.schoolYear.name,
       },
       fee: {
